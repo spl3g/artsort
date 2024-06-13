@@ -56,6 +56,7 @@ async def post_pixsort(
         db: db_session,
 ):
     r = await api.pixsort(body, async_client, db)
+    r = r['path']
     return templates. \
         TemplateResponse("partial/image.html", {"request": request, "url": r})
 
@@ -80,5 +81,6 @@ async def post_kuwahara(
         db: db_session,
 ):
     r = await api.kuwahara(body, async_client, db)
+    r = r['path']
     return templates. \
         TemplateResponse("partial/image.html", {"request": request, "url": r})

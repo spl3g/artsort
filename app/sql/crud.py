@@ -30,6 +30,16 @@ def get_image(db: Session, image_id: UUID):
              .filter(models.Image.id == image_id).first()
 
 
+def get_processed_images(db: Session):
+    return db.query(models.ProcessedImage).all()
+
+
+def get_processed_images_by_filter(db: Session, filter_type: str):
+    return db.query(models.ProcessedImage) \
+             .filter(models.ProcessedImage.filter_type == filter_type) \
+             .all()
+
+
 def get_processed_image(db: Session, image_id: UUID):
     return db.query(models.ProcessedImage) \
              .filter(models.ProcessedImage.id == image_id).first()

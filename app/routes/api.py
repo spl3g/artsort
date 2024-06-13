@@ -6,12 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.sql.schemas import Image, ProcessedImage
 from ..dependencies import httpx_client, get_db
-from ..sql.crud import (
-    get_image,
-    create_image,
-    get_processed_image_pro,
-    create_processed_image,
-)
+from ..sql import crud, schemas
 from httpx import AsyncClient
 from datetime import datetime
 from random import randint
@@ -44,7 +39,7 @@ async def read_artworks(async_client: httpx_client_wrapper, db: db_session):
     r = await async_client.get(f"{BASE_URL}/artworks/search", params=params)
     r = r.json()
     for artwork in r["data"]:
-        image = get_image(db, UUID(artwork["image_id"]))
+        image = crud.get_image(db, UUID(artwork["image_id"]))
         if image:
             iurl = image.path
         else:
@@ -66,7 +61,7 @@ async def read_artwork(
     r = await \
         async_client.get(f"{BASE_URL}/artworks/{artwork_id}", params=params)
     r = r.json()
-    image = get_image(db, UUID(r["data"]["image_id"]))
+    image = crud.get_image(db, UUID(r["data"]["image_id"]))
     if image:
         iurl = image.path
     else:
@@ -81,24 +76,24 @@ async def kuwahara(
         async_client: httpx_client_wrapper,
         db: db_session
 ):
-    image = get_image(db, body.id)
+    image = crud.get_image(db, body.id)
     settings = {
         'window': body.window
     }
     filename = f"images/{body.id}.jpg"
     if image:
         iurl = image.path
-        processed_image = get_processed_image_pro(
+        processed_image = crud.get_processed_image_pro(
             db, body.id, "kuwahara", settings)
         if processed_image:
-            return processed_image.path
+            return {'path': processed_image.path}
     else:
         iurl = f"https://www.artic.edu/iiif/2/{body.id}/full/843,/0/default.jpg"  # noqa: E501
         r = await async_client.get(iurl)
         open(filename, 'wb').write(r.content)
         image = Image(id=body.id, artwork_id=body.artwork_id,
                       path="/" + filename, processed=[])
-        create_image(db, image)
+        crud.create_image(db, image)
 
     output = f"images/processed/kuwahara_{body.id}_{datetime.now()}.png"
     subprocess.run(
@@ -110,8 +105,8 @@ async def kuwahara(
         filter_type="kuwahara",
         settings=settings,
     )
-    create_processed_image(db, processed_image)
-    return '/' + output
+    crud.create_processed_image(db, processed_image)
+    return {'path': '/' + output}
 
 
 @router.post("/process/pixsort")
@@ -120,7 +115,7 @@ async def pixsort(
         async_client: httpx_client_wrapper,
         db: db_session,
 ):
-    image = get_image(db, body.id)
+    image = crud.get_image(db, body.id)
     settings = {
         "threshold_from": body.threashold_from,
         "threshold_to": body.threashold_to,
@@ -129,18 +124,21 @@ async def pixsort(
     filename = f"images/{body.id}.jpg"
     if image:
         iurl = image.path
-        processed_image = get_processed_image_pro(
+        processed_image = crud.get_processed_image_pro(
             db, body.id, "pixsort", settings)
-        print(processed_image)
         if processed_image:
-            return processed_image.path
+            return {'path': processed_image.path}
     else:
         iurl = f"https://www.artic.edu/iiif/2/{body.id}/full/843,/0/default.jpg"  # noqa: E501
         r = await async_client.get(iurl)
         open(filename, 'wb').write(r.content)
-        image = Image(id=body.id, artwork_id=body.artwork_id,
-                      path="/" + filename, processed=[])
-        create_image(db, image)
+        image = Image(
+            id=body.id,
+            artwork_id=body.artwork_id,
+            path="/" + filename,
+            processed=[]
+        )
+        crud.create_image(db, image)
 
     output = f"images/processed/pixsort_{body.id}_{datetime.now()}.png"
     subprocess.run([
@@ -158,5 +156,13 @@ async def pixsort(
         filter_type="pixsort",
         settings=settings,
     )
-    create_processed_image(db, processed_image)
-    return '/' + output
+    crud.create_processed_image(db, processed_image)
+    return {'path': '/' + output}
+
+@router.get('/process', response_model=list[schemas.ProcessedImage])
+async def get_processed(db: db_session):
+    return crud.get_processed_images(db)
+
+@router.get('/process/{filter_type}', response_model=list[schemas.ProcessedImage])
+async def get_processed_by(filter_type: str, db: db_session):
+    return crud.get_processed_images_by_filter(db, filter_type)
