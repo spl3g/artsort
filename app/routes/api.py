@@ -96,8 +96,12 @@ async def kuwahara(
         crud.create_image(db, image)
 
     output = f"images/processed/kuwahara_{body.id}_{datetime.now()}.png"
-    subprocess.run(
-        ["./clis/kuwahara", f"{filename}", output, f"{body.window}"])
+    subprocess.run([
+        "./clis/kuwahara",
+        f"{filename}",
+        output,
+        f"{body.window}"
+    ])
 
     processed_image = ProcessedImage(
         path="/" + output,
