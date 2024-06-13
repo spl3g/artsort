@@ -16,7 +16,7 @@ jobs:
         pip install flake8==3.9.0
     - name: Flake8
       run: flake8 app/
-  linter:
+  tests:
     name: Tests
     runs-on: ubuntu-latest
     steps:
