@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: 'postgres:15.5'
+    env_file: .env
+    ports:
+      - ${POSTGRES_PORT}:5432
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}" ]
+      interval: 1s
+      timeout: 1s
+      retries: 60
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  alembic:
+    build: .
+    command: cd artsort && alembic upgrade head
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  fastapi:
+    build: .
+    command: python -m fastapi run app/main.py
+    env_file: .env
+    environment:
+      - DEBUG_MODE=false
+    ports:
+      - ${PORT}:${PORT}
+    stop_signal: SIGINT
+    depends_on:
+      alembic:
+        condition: service_completed_successfully
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -7,11 +7,9 @@
 - alembic
 - Jinja2
 - uvicorn
+- httpx
 
-# Starting
-start postgresql
+# Start
 ```sh
-alembic upgrade head
-
-fastapi run app/main.py
+docker compose up -d 
 ```
