@@ -159,10 +159,15 @@ async def pixsort(
     crud.create_processed_image(db, processed_image)
     return {'path': '/' + output}
 
+
 @router.get('/process', response_model=list[schemas.ProcessedImage])
 async def get_processed(db: db_session):
     return crud.get_processed_images(db)
 
-@router.get('/process/{filter_type}', response_model=list[schemas.ProcessedImage])
+
+@router.get(
+    '/process/{filter_type}',
+    response_model=list[schemas.ProcessedImage],
+)
 async def get_processed_by(filter_type: str, db: db_session):
     return crud.get_processed_images_by_filter(db, filter_type)
