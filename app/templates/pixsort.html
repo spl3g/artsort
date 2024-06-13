@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}PixSort | {{artwork["title"]}}{% endblock %}
+{% block content %}
+    <div class="container mx-auto p-4">
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-8">
+        <div class="md:w-1/2">
+          <img id="img" src="{{artwork['image_url']}}" alt="{{artwork['title']}}" class="w-full h-auto object-cover rounded-lg">
+        </div>
+        <div class="md:w-1/2">
+          <form hx-post="/pixsort" hx-target="#img" hx-ext="json-enc" hx-swap="outerHTML" hx-vals='{"id": "{{artwork["image_id"]}}", "artwork_id": "{{artwork["id"]}}"}' class="space-y-4" hx-on="htmx:configRequest:showLoading">
+            <div>
+              <label for="threshold_from" class="block text-sm font-medium text-gray-700">Threshold From</label>
+              <input type="text" id="threshold_from" name="threshold_from" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div>
+              <label for="threshold_to" class="block text-sm font-medium text-gray-700">Threshold To</label>
+              <input type="text" id="threshold_to" name="threshold_to" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+            <div class="flex items-center">
+              <input type="checkbox" id="inverse_threshold" name="inverse_threashold" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+              <label for="inverse_threshold" class="ml-2 block text-sm text-gray-900">Inverse Threshold</label>
+            </div>
+            <button type="submit" class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition-colors duration-300">Process</button>
+          </form>
+          <div id="loading" class="hidden text-center mt-4">
+            <svg class="animate-spin h-5 w-5 text-blue-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <p class="text-blue-500">Processing...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("htmx:configRequest", function(event) {
+        document.getElementById("loading").classList.remove("hidden");
+      });
+
+      document.addEventListener("htmx:afterSwap", function(event) {
+        document.getElementById("loading").classList.add("hidden");
+      });
+    </script>
+{% endblock %}
