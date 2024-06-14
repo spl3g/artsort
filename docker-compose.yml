@@ -14,7 +14,9 @@ services:
       - "host.docker.internal:host-gateway"
   alembic:
     build: .
-    command: cd artsort && alembic upgrade head
+    command: alembic upgrade head
+    volumes:
+      - .:/code
     depends_on:
       postgres:
         condition: service_healthy
@@ -22,12 +24,14 @@ services:
       - "host.docker.internal:host-gateway"
   fastapi:
     build: .
-    command: python -m fastapi run app/main.py
+    command: bash -c "mkdir -p images/processed && fastapi run app/main.py"
+    volumes:
+      - .:/code
     env_file: .env
     environment:
       - DEBUG_MODE=false
     ports:
-      - ${PORT}:${PORT}
+      - ${PORT}:8000
     stop_signal: SIGINT
     depends_on:
       alembic:

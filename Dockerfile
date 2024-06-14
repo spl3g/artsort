@@ -1,10 +1,8 @@
 FROM python:3.10.13
 
-WORKDIR /artsort
+WORKDIR /code
 
-COPY app/ .
-COPY alembic.ini .
-COPY migrations/ .
-COPY requirements.txt .
+COPY . /code/
+ENV PATH="${PATH}:/code/clis"
 
 RUN pip install -r requirements.txt

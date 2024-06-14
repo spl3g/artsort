@@ -16,7 +16,7 @@ POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
 
 
 SQLALCHEMY_DATABASE_URL = \
-    f"postgresql://{POSTGRES_HOST}:{POSTGRES_PORT}/test?user={POSTGRES_USER}&password={POSTGRES_PASSWORD}"  # noqa: E501
+    f"postgresql://127.0.0.1:{POSTGRES_PORT}/test?user={POSTGRES_USER}&password={POSTGRES_PASSWORD}"  # noqa: E501
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
@@ -76,4 +76,23 @@ def test_post_kuwahara():
         .json()['path'] \
         .startswith(
             '/images/processed/kuwahara_3fa85f64-5717-4562-b3fc-2c963f66afa6'
+        )
+
+
+def test_post_pixsort():
+    response = client.post(
+        "/api/v1/process/pixsort",
+        json={
+            "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+            "artwork_id": 0,
+            "threashold_from": 0.25,
+            "threashold_to": 0.75,
+            "inverse_threashold": True,
+        }
+    )
+    assert response.status_code == 200
+    assert response \
+        .json()['path'] \
+        .startswith(
+            '/images/processed/pixsort_3fa85f64-5717-4562-b3fc-2c963f66afa6'
         )
